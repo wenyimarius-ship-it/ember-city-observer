@@ -348,7 +348,6 @@ $("#png").onclick = async () => {
     b.disabled = false;
   }
 };
-$("#start").onclick = () => $("#spaces").scrollIntoView({ behavior: "smooth" });
 $("#edit").onclick = () => $("#route").scrollIntoView({ behavior: "smooth" });
 render();
 if (storageFailed)
