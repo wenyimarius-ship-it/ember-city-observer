@@ -11,3 +11,18 @@
     .play-actions button { min-height: 44px; white-space: normal; }
     .play-result { padding: 1rem; background: #fffdf6; border-left: .25rem solid #405646; }
     .city-record { margin: 1.25rem auto 2rem; }
+
+.result-mode > :not(#city-play) { display: none; }
+.city-play.result-mode { padding-top: 1rem; }
+.result-mode #city-play { margin-top: 0; }
+.result-cards { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .65rem; }
+.route-card { padding: .7rem; border: 1px solid #777b70; background: #fffdf6; border-radius: .5rem; }
+.route-card.chosen { border: 2px solid #405646; padding: calc(.7rem - 1px); }
+.route-card h3 { display: flex; gap: .4rem; align-items: center; justify-content: space-between; margin: 0; font-size: 1rem; }
+.choice-tag { font-size: .8rem; color: #405646; white-space: nowrap; }
+.route-card .play-map { border: 0; padding: 0; margin: .35rem 0; }
+.route-card .play-map svg { height: 64px; }
+.route-card .play-map figcaption { font-size: .75rem; }
+.route-card p, .result-mode .play-result p { font-size: 1rem; line-height: 1.5; margin: .2rem 0; }
+.result-mode .play-result { margin-top: .65rem; padding: .5rem .7rem; }
+@media(max-width: 600px) { .result-cards { grid-template-columns: 1fr; } }

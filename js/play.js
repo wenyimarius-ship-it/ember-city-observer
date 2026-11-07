@@ -22,16 +22,17 @@ let routeIndex = 0;
 let stopIndex = 0;
 let choice = 0;
 
-function map(route, progress = 1) {
+function map(route, progress = 1, compact = false) {
   const path = route.points.map((point) => point.join(",")).join(" ");
   return `<figure class="play-map"><svg viewBox="0 0 135 100" aria-hidden="true">
     <polyline points="${path}" fill="none" stroke="#9a9b91" stroke-width="4" stroke-dasharray="4 5"/>
     <polyline points="${path}" pathLength="100" fill="none" stroke="#405646" stroke-width="5" stroke-linecap="round" stroke-dasharray="${progress * 100} 100"/>
     <circle cx="20" cy="80" r="5" fill="#405646"/>
-    </svg><figcaption>${route.name}<br>示意路线，非真实地点</figcaption></figure>`;
+    </svg><figcaption>${compact ? "" : route.name + "<br>"}示意路线，非真实地点</figcaption></figure>`;
 }
 
 function show(title, body, focus = true) {
+  stage.closest("section").classList.remove("result-mode");
   stage.innerHTML = `<h2 tabindex="-1">${title}</h2>${body}`;
   if (focus) stage.querySelector("h2").focus();
 }
@@ -59,11 +60,21 @@ function chooseReason() {
 }
 
 function result(index) {
-  const [label, response] = reasons[index];
+  const [label] = reasons[index];
+  const differences = [
+    ["一路知道往哪走", "回去要走原路"],
+    ["绕一圈有新发现", "岔路多，要自己决定往哪走"],
+  ];
   show("我的逛街路线对照卡",
-    `<div class="play-maps">${routes.map((route) => map(route)).join("")}</div>
-    <div class="play-result"><strong>我选 ${routes[choice].name}</strong><p>我的理由：${label}</p><p>${response}</p></div>
+    `<div class="result-cards">${routes.map((route, i) => `<article class="route-card ${choice === i ? "chosen" : ""}">
+      <h3>${route.name}${choice === i ? '<span class="choice-tag">我选这条</span>' : ''}</h3>
+      ${map(route, 1, true)}
+      <p>好处：${differences[i][0]}</p><p>代价：${differences[i][1]}</p>
+    </article>`).join("")}</div>
+    <div class="play-result"><p>我的理由：${label}</p><p>你选了 ${"AB"[choice]}，因为这次你${index === 3 ? "就是更想走这条" : "更想" + label}。</p></div>
     <div class="play-actions"><button class="primary" data-step="reason">换个原因再试一次</button><button data-step="restart">从头再走一次</button></div>`);
+  stage.closest("section").classList.add("result-mode");
+  stage.scrollIntoView({block: "start"});
 }
 
 stage.addEventListener("click", (event) => {
