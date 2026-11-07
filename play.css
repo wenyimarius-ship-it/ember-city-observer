@@ -102,7 +102,7 @@
   margin: 0.35rem 0;
 }
 .route-card .play-map svg {
-  height: 64px;
+  height: 112px;
 }
 .route-card .play-map figcaption {
   font-size: 0.75rem;
@@ -118,7 +118,16 @@
   padding: 0.5rem 0.7rem;
 }
 @media (max-width: 600px) {
+  .route-card .play-map svg {
+    height: 88px;
+  }
   .result-cards {
     grid-template-columns: 1fr;
   }
+}
+
+.completion {
+  color: var(--ink);
+  font-size: 14px;
+  margin: 0 0 12px;
 }

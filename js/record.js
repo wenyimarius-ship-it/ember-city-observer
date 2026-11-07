@@ -87,7 +87,7 @@ function card(r) {
 }
 function listing() {
   $("#saved-records").innerHTML = records.length
-    ? `<h2>我的路线记录</h2>${records.map((r) => `<div class="saved-row"><h3>${esc(r.space.name)}</h3><button data-open="${r.id}">${r.completed ? "查看路线卡" : "继续画路线"}</button></div>`).join("")}${records.filter((r) => r.completed).length >= 2 ? '<button id="graphic-compare">看看最近两条路线（可选）</button>' : ""}<button id="new-place">记另一个地方</button>`
+    ? `<h2>我的路线记录</h2>${records.map((r) => `<div class="saved-row"><h3>${esc(r.space.name)}</h3><button data-open="${r.id}">${r.completed ? "查看路线卡" : "继续画路线"}</button></div>`).join("")}${records.filter((r) => r.completed).length >= 2 ? '<button id="graphic-compare">看看最近两条路线（可选）</button>' : ""}${$("#result").hidden ? '<button id="new-place">再记一个地方</button>' : ""}`
     : "";
 }
 function draw() {
@@ -104,7 +104,7 @@ function draw() {
   $("#marker-list").innerHTML = s.markers
     .map((m) => {
       const f = feelings.find((f) => f.id === m.kind);
-      return `<div class="marker-item" id="marker-${esc(m.id)}"><span>${f.icon} ${f.label}</span> <button data-remove-marker="${esc(m.id)}">删除标记</button><details><summary>补一句（可选）</summary><label>文字补充<textarea maxlength="500" data-marker-note="${esc(m.id)}">${esc(m.note)}</textarea></label></details></div>`;
+      return `<div class="marker-item" id="marker-${esc(m.id)}"><label>感受<select data-marker-kind="${esc(m.id)}">${feelings.map((option) => `<option value="${option.id}" ${option.id === m.kind ? "selected" : ""}>${option.icon} ${option.label}</option>`).join("")}</select></label> <button data-remove-marker="${esc(m.id)}">删除标记</button><details><summary>补一句（可选）</summary><label>文字补充<textarea maxlength="500" data-marker-note="${esc(m.id)}">${esc(m.note)}</textarea></label></details></div>`;
     })
     .join("");
   $("#finish").disabled = s.nodes.length < 2;
@@ -143,8 +143,9 @@ function result(r) {
   $("#editor").hidden = true;
   $("#result").hidden = false;
   $("#result").innerHTML =
-    `<h2 tabindex="-1">我的逛街路线 · 已完成</h2>${card(r)}<div class="tools"><button id="edit-route">继续调整</button><button id="advanced-record">进阶笔记与导出（可选）</button></div>`;
+    `<h2 tabindex="-1">这条路线已记下</h2>${card(r)}<div class="tools"><button id="edit-route">继续编辑</button><button id="new-place">再记一个地方</button><a href="./" class="button">返回 City 首页</a></div>`;
   listing();
+  $("#advanced-record").hidden = false;
   $("#result h2").focus();
 }
 $("#place-form").onsubmit = (e) => {
@@ -252,6 +253,13 @@ $("#marker-list").onclick = (e) => {
     draw();
   }
 };
+$("#marker-list").onchange = (e) => {
+  const id = e.target.dataset.markerKind;
+  if (!id || !feelings.some((f) => f.id === e.target.value)) return;
+  current.space.markers.find((m) => m.id === id).kind = e.target.value;
+  persist();
+  draw();
+};
 $("#marker-list").oninput = (e) => {
   if (e.target.dataset.markerNote) {
     current.space.markers.find(
@@ -295,10 +303,13 @@ let drag = null,
   suppressClick = false;
 canvas.onpointerdown = (e) => {
   suppressClick = false;
-  tap =
-    e.pointerType === "touch"
-      ? { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false }
-      : null;
+  tap = {
+    id: e.pointerId,
+    x: e.clientX,
+    y: e.clientY,
+    moved: false,
+    touch: e.pointerType === "touch",
+  };
   const g = e.target.closest("[data-node]");
   if (g && mode === "draw") {
     e.preventDefault();
@@ -334,12 +345,11 @@ canvas.onpointerup = (e) => {
     return;
   }
   if (tap && tap.id === e.pointerId) {
-    const moved = tap.moved;
+    const moved = tap.moved,
+      touch = tap.touch;
     tap = null;
-    if (!moved) {
-      handleTap(e);
-      suppressClick = true;
-    }
+    if (!moved && touch) handleTap(e);
+    suppressClick = moved || touch;
   }
 };
 canvas.onpointercancel = (e) => {
@@ -408,33 +418,38 @@ $("#finish").onclick = () => {
 };
 $("#result").onclick = (e) => {
   if (e.target.id === "edit-route") open(current);
-  if (e.target.id === "advanced-record") {
-    try {
-      const key = sessionKey(current.id),
-        raw = localStorage.getItem(key);
-      const d = raw ? validate(JSON.parse(raw)) : initial();
-      const notes = d.spaces[0].notes;
-      d.spaces[0] = { ...d.spaces[0], ...current.space, notes };
-      localStorage.setItem(key, JSON.stringify(d));
-      location.href = `desk.html?session=${current.id}#route`;
-    } catch {
-      tell("无法打开进阶会话，原始会话未修改，当前路线仍保留。");
-    }
+  if (e.target.id === "new-place") newPlace();
+};
+$("#advanced-record").onclick = () => {
+  try {
+    const key = sessionKey(current.id),
+      raw = localStorage.getItem(key);
+    const d = raw ? validate(JSON.parse(raw)) : initial();
+    const notes = d.spaces[0].notes;
+    d.spaces[0] = { ...d.spaces[0], ...current.space, notes };
+    localStorage.setItem(key, JSON.stringify(d));
+    location.href = `desk.html?session=${current.id}#route`;
+  } catch {
+    tell("无法打开进阶会话，原始会话未修改，当前路线仍保留。");
   }
 };
+function newPlace() {
+  $("#editor").hidden = true;
+  $("#result").hidden = true;
+  $("#place-form").hidden = false;
+  $("#place-form").reset();
+  $("#advanced-record").hidden = true;
+  listing();
+  $("#place").focus();
+}
+
 $("#saved-records").onclick = (e) => {
   const id = e.target.dataset.open;
   if (id) {
     const r = records.find((r) => r.id === id);
     r.completed ? result(r) : open(r);
   }
-  if (e.target.id === "new-place") {
-    $("#editor").hidden = true;
-    $("#result").hidden = true;
-    $("#place-form").hidden = false;
-    $("#place-form").reset();
-    $("#place").focus();
-  }
+  if (e.target.id === "new-place") newPlace();
   if (e.target.id === "graphic-compare") {
     const pair = records.filter((r) => r.completed).slice(-2);
     $("#editor").hidden = true;

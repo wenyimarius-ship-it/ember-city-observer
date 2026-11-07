@@ -91,19 +91,19 @@ function chooseReason() {
           `<button class="primary" data-step="reason-${index}">${label}</button>`,
       )
       .join("")}</div>
-    <div class="play-actions"><button data-step="compare">重新选路线</button></div>`,
+    <div class="play-actions"><button data-step="skip-reason">跳过理由</button><button data-step="compare">重新选路线</button></div>`,
   );
 }
 
 function result(index) {
-  const [label] = reasons[index];
+  const label = index === null ? null : reasons[index][0];
   const differences = [
     ["一路知道往哪走", "回去要走原路"],
     ["绕一圈有新发现", "岔路多，要自己决定往哪走"],
   ];
   show(
     "我的逛街路线对照卡",
-    `<div class="result-cards">${routes
+    `<p class="completion">这次路线选择已完成</p><div class="result-cards">${routes
       .map(
         (
           route,
@@ -115,8 +115,8 @@ function result(index) {
     </article>`,
       )
       .join("")}</div>
-    <div class="play-result"><p>我的理由：${label}</p><p>你选了 ${"AB"[choice]}，因为这次你${index === 3 ? "就是更想走这条" : "更想" + label}。</p></div>
-    <div class="play-actions"><button class="primary" data-step="reason">换个原因再试一次</button><button data-step="restart">从头再走一次</button></div>`,
+    <div class="play-result"><p>${label ? "我的理由：" + label : "这次跳过了理由"}</p><p>你选了 ${"AB"[choice]}${label ? `，因为这次你${index === 3 ? "就是更想走这条" : "更想" + label}` : ""}。</p></div>
+    <div class="play-actions"><button class="primary" data-step="reason">换个原因再试一次</button></div>`,
   );
   stage.closest("section").classList.add("result-mode");
   document.querySelector("#record-entry").hidden = false;
@@ -148,6 +148,8 @@ stage.addEventListener("click", (event) => {
     chooseReason();
   } else if (step === "compare") {
     compare();
+  } else if (step === "skip-reason") {
+    result(null);
   } else if (step.startsWith("reason-")) {
     result(Number(step.slice("reason-".length)));
   }
