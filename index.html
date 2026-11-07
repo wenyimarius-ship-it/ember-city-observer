@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>How a City Moves You · City Observation Desk</title>
+    <title>城市观察台 · City Observation Desk</title>
     <meta
       name="description"
-      content="绘制路线、记录停留与空间体验，对照两个城市空间，生成属于自己的观察卡。"
+      content="走两条示意路线，选一条你更愿意继续逛的路。"
     />
     <meta property="og:title" content="How a City Moves You" />
     <meta
@@ -18,6 +18,23 @@
     <meta name="theme-color" content="#f3f1e9" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="style.css" />
+  <style>
+    .city-play { max-width: 40rem; margin: 0 auto; padding: clamp(1.25rem, 5vw, 4rem) 0 1.5rem; }
+    .city-play h1 { font-size: clamp(2rem, 7vw, 4.25rem); line-height: 1.12; margin: .4em 0; }
+    .play-question { font-weight: 700; font-size: clamp(1.15rem, 4vw, 1.5rem); }
+    #city-play { margin-top: 1.25rem; }
+    #city-play h2 { font-size: 1.4rem; line-height: 1.3; }
+    .play-map { margin: .75rem 0; padding: .6rem 1rem; background: #fffdf6; border: 1px solid #777b70; border-radius: .5rem; }
+    .play-map svg { display: block; width: 100%; max-height: 8rem; }
+    .play-map figcaption { color: #42483e; font-size: .85rem; }
+    .play-maps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+    .play-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .85rem; }
+    .play-actions button { min-height: 44px; white-space: normal; }
+    .play-result { padding: 1rem; background: #fffdf6; border-left: .25rem solid #405646; }
+    .city-record { margin: 1.25rem auto 2rem; }
+    .city-record summary { cursor: pointer; padding: .75rem 0; }
+  </style>
+    <script type="module" src="js/play.js"></script>
     <script type="module" src="js/app.js"></script>
   </head>
   <body>
@@ -27,22 +44,16 @@
       ><span>VOL. 03 — CITY OBSERVATION DESK</span>
     </header>
     <main>
-      <section class="intro">
-        <div class="eyebrow">PERSONAL GEOGRAPHIES / 城市田野笔记</div>
-        <h1>
-          How a City<br /><em>Moves You</em><span class="asterisk">∗</span>
-        </h1>
-        <div class="intro-bottom">
-          <p>
-            Observe the paths you take, the places you pause,<br />and the
-            spaces that shape your experience.
-          </p>
-          <p>
-            不同商场、街区与城市空间会带来不同的行走感受。<br />绘制自己的路径，记录空间与行为之间的关系。
-          </p>
-          <button id="start" class="primary">Start Observing ↗</button>
-        </div>
+      <section class="city-play" aria-labelledby="play-title">
+        <p class="eyebrow">CITY OBSERVATION DESK</p>
+        <h1 id="play-title">城市观察台</h1>
+        <p class="play-question">同样是逛街，你更想走哪条路？</p>
+        <p>走两条示意路线，选一条你更愿意继续逛的路。约 1 分钟。</p>
+        <noscript><p>请开启 JavaScript 后开始试玩。</p></noscript>
+        <div id="city-play"></div>
       </section>
+      <details class="city-record">
+        <summary>记录我走过的地方</summary>
       <nav aria-label="工作流程">
         <a href="#spaces">01 / Spaces</a><a href="#route">02 / Draw & Record</a
         ><a href="#compare">03 / Compare</a
@@ -148,6 +159,7 @@
           以便迁移或备份；清空不会删除已下载的文件。
         </p>
       </section>
+      </details>
     </main>
     <footer>
       <span>EMBER LAB / CITY OBSERVATION DESK</span
