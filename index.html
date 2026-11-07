@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>How a City Moves You · City Observation Desk</title>
+    <title>城市观察台 · City Observation Desk</title>
     <meta
       name="description"
-      content="绘制路线、记录停留与空间体验，对照两个城市空间，生成属于自己的观察卡。"
+      content="走两条示意路线，选一条你更愿意继续逛的路。"
     />
-    <meta property="og:title" content="How a City Moves You" />
+    <meta property="og:title" content="城市观察台" />
     <meta
       property="og:description"
       content="A personal field desk for paths, pauses, and urban spaces."
@@ -18,148 +18,23 @@
     <meta name="theme-color" content="#f3f1e9" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="style.css" />
-    <script type="module" src="js/app.js"></script>
+    <link rel="stylesheet" href="play.css" />
+    <script type="module" src="js/play.js"></script>
   </head>
   <body>
-    <header>
-      <a href="https://lab.mariustang.com">← Ember Lab</a
-      ><span>EMBER / FIELD TOOLS</span
-      ><span>VOL. 03 — CITY OBSERVATION DESK</span>
-    </header>
+    <header><a href="https://lab.mariustang.com">← Ember Lab</a></header>
     <main>
-      <section class="intro">
-        <div class="eyebrow">PERSONAL GEOGRAPHIES / 城市田野笔记</div>
-        <h1>
-          How a City<br /><em>Moves You</em><span class="asterisk">∗</span>
-        </h1>
-        <div class="intro-bottom">
-          <p>
-            Observe the paths you take, the places you pause,<br />and the
-            spaces that shape your experience.
-          </p>
-          <p>
-            不同商场、街区与城市空间会带来不同的行走感受。<br />绘制自己的路径，记录空间与行为之间的关系。
-          </p>
-          <button id="start" class="primary">Start Observing ↗</button>
-        </div>
-      </section>
-      <nav aria-label="工作流程">
-        <a href="#spaces">01 / Spaces</a><a href="#route">02 / Draw & Record</a
-        ><a href="#compare">03 / Compare</a
-        ><a href="#card">04 / Observation Card</a>
-      </nav>
-      <div class="utility">
-        <span id="save-status" role="status">自动保存在此浏览器</span
-        ><button id="demo">载入 Demo 示例</button
-        ><button id="backup">导出 JSON</button
-        ><button id="import-button">导入 JSON</button
-        ><input
-          id="import"
-          type="file"
-          accept="application/json,.json"
-          hidden
-        /><button id="reset">新建 / 清空</button>
-      </div>
-      <p id="message" role="status"></p>
-      <section id="spaces">
-        <div class="section-title">
-          <h2><small>01 / IDENTIFY</small>Two spaces, your perspective.</h2>
-          <p>真实地点或个人探索，都从命名开始。</p>
-        </div>
-        <div id="space-forms" class="two-col"></div>
-      </section>
-      <section id="route">
-        <div class="section-title">
-          <h2>
-            <small>02 / TRACE & NOTICE</small>A route is a story of choices.
-          </h2>
-          <div id="space-tabs" class="tabs"></div>
-        </div>
-        <p id="active-caption"></p>
-        <div class="desk">
-          <div class="drawing">
-            <div class="canvas-bar">
-              <span>ABSTRACT ROUTE / 抽象路线</span
-              ><span id="node-count"></span>
-            </div>
-            <svg
-              id="canvas"
-              viewBox="0 0 800 500"
-              aria-label="路线画布"
-              role="group"
-            ></svg>
-            <div id="add-tools" class="tools"></div>
-            <p class="hint">
-              点击按钮添加节点；拖动编号调整位置，或用右侧坐标 /
-              键盘方向键微调。仅节点阻止触摸滚动，空白区域可正常滚动。<br />示意图不代表真实地理位置、平面比例或经过测量的距离。最多
-              100 个节点。
-            </p>
-          </div>
-          <aside>
-            <h3>Route sequence / 路线顺序</h3>
-            <div id="node-list"></div>
-          </aside>
-        </div>
-        <div class="notes-title">
-          <h3>Observation notes / 观察笔记</h3>
-          <p>记录当时的感受；这里没有自动评分。</p>
-        </div>
-        <div id="notes" class="notes"></div>
-      </section>
-      <section id="compare">
-        <div class="section-title">
-          <h2><small>03 / SIDE BY SIDE</small>Notice the difference.</h2>
-          <p>差异由你描述，偏好由你决定。</p>
-        </div>
-        <div id="compare-tabs" class="tabs"></div>
-        <div id="comparison" class="two-col"></div>
-        <div class="preference">
-          <label
-            >我更偏好<select id="preference">
-              <option value="none">尚未选择</option>
-              <option value="A">Space A</option>
-              <option value="B">Space B</option>
-              <option value="equal">各有特点 / 无偏好</option>
-            </select></label
-          ><label
-            >为什么？<textarea
-              id="reason"
-              maxlength="10000"
-              placeholder="什么让你愿意停留、继续探索或离开？"
-            ></textarea>
-          </label>
-        </div>
-      </section>
-      <section id="card">
-        <div class="section-title">
-          <h2>
-            <small>04 / TAKE IT WITH YOU</small>Your observation, collected.
-          </h2>
-          <button id="png" class="primary">导出观察卡 PNG ↓</button>
-        </div>
-        <div id="card-preview"></div>
-        <div class="tools">
-          <button id="edit">← 重新编辑</button
-          ><button id="card-json">导出 JSON 备份</button
-          ><button id="new">新建观察</button>
-        </div>
-        <p class="hint">
-          数据仅保留在当前浏览器。请导出 JSON
-          以便迁移或备份；清空不会删除已下载的文件。
-        </p>
+      <section class="city-play" aria-labelledby="play-title">
+        <p class="eyebrow">CITY OBSERVATION DESK</p>
+        <h1 id="play-title">城市观察台</h1>
+        <p class="play-question">同样是逛街，你更想走哪条路？</p>
+        <p>走两条示意路线，选一条你更愿意继续逛的路。约 1 分钟。</p>
+        <noscript><p>请开启 JavaScript 后开始试玩。</p></noscript>
+        <div id="city-play"></div>
       </section>
     </main>
-    <footer>
-      <span>EMBER LAB / CITY OBSERVATION DESK</span
-      ><span>Every path holds a perspective. / 每条路线，都是一种视角。</span>
+    <footer id="record-entry" class="city-record" hidden>
+      <a href="record.html">记下一个地方 ↗</a>
     </footer>
-    <dialog id="confirm">
-      <h3 id="confirm-title"></h3>
-      <p>当前记录将被替换，建议先导出 JSON 备份。</p>
-      <div class="tools">
-        <button id="cancel">取消</button
-        ><button id="accept" class="primary">确认替换</button>
-      </div>
-    </dialog>
   </body>
 </html>

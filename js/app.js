@@ -9,7 +9,12 @@ import {
 } from "./state.js";
 import { download, cardPNG, summary } from "./export.js";
 const $ = (s) => document.querySelector(s),
-  key = "ember-city-observation-v1";
+  key = (() => {
+    const id = new URLSearchParams(location.search).get("session");
+    return id && /^[a-f0-9-]{36}$/.test(id)
+      ? "ember-city-card-session:" + id
+      : "ember-city-observation-v1";
+  })();
 let data = initial(),
   selected = null,
   compare = "route",
@@ -348,7 +353,6 @@ $("#png").onclick = async () => {
     b.disabled = false;
   }
 };
-$("#start").onclick = () => $("#spaces").scrollIntoView({ behavior: "smooth" });
 $("#edit").onclick = () => $("#route").scrollIntoView({ behavior: "smooth" });
 render();
 if (storageFailed)

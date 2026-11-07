@@ -1,3 +1,28 @@
+# City 试玩草稿 · ux/city-first-play
+
+本轮仅更新 City 草稿 PR #1，不正式发布，不改 Lab 或 Puzzle。
+
+- `/`：参考历史 `6fa84f1` 恢复两条示意路线的逐站探索、途中反馈、偏好与可跳过的理由选择、试玩结果。不采用立即 A/B 出结果版本。试玩结束后才显示真实地点记录入口。
+- `/record.html`：输入地点名称即可画 SVG 路线；城市、类型、日期可选。点空白处加节点，拖动或坐标输入调整，选中节点可删除或标为停留。画完可直接完成，或选择四种感受后点路线添加图形标记；文字完全可选。
+- 完成后显示「我的逛街路线」卡：地点、路线、停留 / 感受标记和只依据实际记录的回顾。不要求笔记、两个地点、对照或导出。两条完成记录后提供可选图形比较。
+- `/desk.html`：保留原完整笔记、路线、详细 A/B 对照及 JSON / PNG 导出工具；本轮未修改该页、`js/app.js`、旧状态模型或导出模块。
+- 原 `ember-city-observation-v1`、`ember-city-small-cards-v1` 和已有 `ember-city-card-session:<UUID>` 保持兼容。轻量路线用独立 `ember-city-route-records-v1` 自动保存；旧记录入口位于折叠的「以前的记录与进阶工具」。旧小卡没有路线会话时，仅在打开后新建对应会话，不覆盖已有会话。新路线进入进阶工具时保留已有高级笔记与第二处空间。
+
+## 本轮验证
+
+先运行 `npm start`；如 4173 被残留服务占用，可另用 `python3 -m http.server 4183`，再相应设置 `TEST_URL`。
+
+```sh
+npm test
+TEST_URL=http://localhost:4183/ npm run test:play
+TEST_URL=http://localhost:4183/ npm run test:record
+TEST_URL=http://localhost:4183/desk.html npm run test:browser
+```
+
+试玩和轻量路线浏览器测试覆盖 375 / 1440px；完整工具回归覆盖 320 / 390 / 700 / 1440px。自动化和模拟触控不视为真人验收；详见 [UX-ACCEPTANCE.md](UX-ACCEPTANCE.md)。下方保留原 MVP 的设计与部署说明，入口现已拆分为试玩、轻记录和进阶工具。
+
+---
+
 # City Observation Desk · Phase 3.3
 
 **How a City Moves You** — Ember Personal Web / Ember Lab 的独立城市空间观察工具。

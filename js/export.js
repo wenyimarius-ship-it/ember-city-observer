@@ -175,3 +175,70 @@ export async function cardPNG(d) {
   if (!blob) throw Error("图片生成失败，请改用 JSON 备份");
   return blob;
 }
+
+// Small cards contain only the visitor's place, exact words, and optional route.
+export async function smallCardPNG(card, observation) {
+  await document.fonts.ready;
+  const canvas = document.createElement("canvas");
+  canvas.width = 1000;
+  canvas.height = 1;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw Error("浏览器不支持图片导出");
+  const lines = [];
+  function wrap(text, size, lineHeight, color) {
+    ctx.font = `${size}px sans-serif`;
+    let row = "";
+    for (const char of text) {
+      if (char === "\n" || (row && ctx.measureText(row + char).width > 860)) {
+        lines.push({ text: row, size, lineHeight, color });
+        row = "";
+      }
+      if (char !== "\n") row += char;
+    }
+    lines.push({ text: row, size, lineHeight, color });
+  }
+  wrap("我的地点小卡", 22, 40, "#b64c31");
+  wrap(card.name, 38, 58, "#293e36");
+  wrap("", 26, 32, "#293e36");
+  wrap(card.feeling, 28, 44, "#293e36");
+  const nodes = observation.spaces[0].nodes;
+  const textHeight = lines.reduce((h, line) => h + line.lineHeight, 0);
+  const height = 140 + textHeight + (nodes.length ? 500 : 0);
+  if (height > 30000) throw Error("内容过长，请先导出备份。");
+  canvas.height = height;
+  ctx.fillStyle = "#faf9f4";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  let y = 80;
+  for (const line of lines) {
+    ctx.font = `${line.size}px sans-serif`;
+    ctx.fillStyle = line.color;
+    ctx.fillText(line.text, 70, y);
+    y += line.lineHeight;
+  }
+  if (nodes.length) {
+    y += 30;
+    ctx.strokeStyle = "#b64c31";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    nodes.forEach((n, i) => {
+      const x = 70 + (n.x / 800) * 860,
+        ny = y + (n.y / 500) * 400;
+      i ? ctx.lineTo(x, ny) : ctx.moveTo(x, ny);
+    });
+    ctx.stroke();
+    nodes.forEach((n) => {
+      ctx.beginPath();
+      ctx.arc(70 + (n.x / 800) * 860, y + (n.y / 500) * 400, 9, 0, Math.PI * 2);
+      ctx.fillStyle = "#b64c31";
+      ctx.fill();
+    });
+    ctx.fillStyle = "#6d746c";
+    ctx.font = "20px sans-serif";
+    ctx.fillText("示意路线，非真实比例", 70, y + 445);
+  }
+  const blob = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/png"),
+  );
+  if (!blob) throw Error("图片生成失败，请导出备份。");
+  return blob;
+}
