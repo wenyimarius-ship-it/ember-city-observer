@@ -1,0 +1,62 @@
+.quick-record {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  font-size: 16px;
+}
+.quick-record h1 {
+  font-size: 32px;
+  line-height: 1.3;
+  letter-spacing: 0;
+  margin: 0 0 20px;
+}
+.quick-record label {
+  font-size: 16px;
+}
+.quick-record input,
+.quick-record textarea {
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+.quick-record textarea {
+  min-height: 110px;
+}
+.quick-record button,
+.quick-record .button {
+  font-size: 16px;
+  min-height: 44px;
+}
+.small-card {
+  border: 1px solid var(--line);
+  background: #faf9f4;
+  padding: 20px;
+  margin: 20px 0;
+}
+.small-card h2 {
+  font-size: 24px;
+  overflow-wrap: anywhere;
+}
+.small-card p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.small-card .tools {
+  margin: 16px 0 0;
+}
+#legacy {
+  display: block;
+  margin-bottom: 20px;
+}
+#legacy[hidden],
+[hidden] {
+  display: none !important;
+}
+#compare-link {
+  margin-top: 20px;
+}
+#record-message:empty {
+  display: none;
+}
+#record-message {
+  color: var(--accent);
+}

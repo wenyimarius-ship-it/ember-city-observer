@@ -6,7 +6,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ["--no-sandbox"],
 });
-const BASE = process.env.TEST_URL || "http://127.0.0.1:4173";
+const BASE = process.env.TEST_URL || "http://127.0.0.1:4173/desk.html";
 const context = await browser.newContext({
   viewport: { width: 1440, height: 1000 },
   acceptDownloads: true,
@@ -82,13 +82,11 @@ const backup = await Promise.all([
 await backup[0].saveAs("/tmp/city-backup.json");
 const saved = JSON.parse(await fs.readFile("/tmp/city-backup.json", "utf8"));
 assert.equal(saved.spaces[1].notes.atmosphere, "街区更热闹。");
-await page
-  .locator("#import")
-  .setInputFiles({
-    name: "bad.json",
-    mimeType: "application/json",
-    buffer: Buffer.from('{"version":99}'),
-  });
+await page.locator("#import").setInputFiles({
+  name: "bad.json",
+  mimeType: "application/json",
+  buffer: Buffer.from('{"version":99}'),
+});
 assert.match(await page.locator("#message").textContent(), /导入失败/);
 await page.locator("#reset").click();
 await page.locator("#accept").click();

@@ -1,3 +1,27 @@
+# City 试玩草稿 · ux/city-first-play
+
+本轮仅更新 City 草稿 PR #1，不正式发布，不改 Lab 或 Puzzle。
+
+- `/`：依次走 A/B 路线，再选择路线与理由；结果同页显示两张同结构对照卡，给出各自好处与代价，仅标记用户选中的卡。回应只复述当前选择与理由。
+- `/record.html`：只问「你去了哪里？」「走起来是什么感觉？」；立即生成保留原话的小卡。生成后才提供再记、画路线、导出；两张起才提供最近两处地点对照。
+- `/desk.html`：保留原完整记录、SVG 路线与对照工具；原 `ember-city-observation-v1` 数据继续原位读取。新小卡集合使用 `ember-city-small-cards-v1`，每卡路线与对照使用独立 `ember-city-card-session:<UUID>`，不覆盖旧记录。
+- 小卡导出支持原生 Canvas PNG 与包含原话和路线状态的 JSON；原完整工具的导出 / 导入继续保留。
+
+## 本轮验证
+
+先运行 `npm start`；如 4173 被残留服务占用，可另用 `python3 -m http.server 4183`，再相应设置 `TEST_URL`。
+
+```sh
+npm test
+TEST_URL=http://localhost:4183/ npm run test:play
+TEST_URL=http://localhost:4183/ npm run test:record
+TEST_URL=http://localhost:4183/desk.html npm run test:browser
+```
+
+试玩与小卡浏览器测试覆盖 375px；完整工具回归覆盖 320 / 390 / 700 / 1440px。自动化和模拟触控不视为真人验收；详见 [UX-ACCEPTANCE.md](UX-ACCEPTANCE.md)。下方保留原 MVP 的设计与部署说明，入口现已拆分为试玩、轻记录和进阶工具。
+
+---
+
 # City Observation Desk · Phase 3.3
 
 **How a City Moves You** — Ember Personal Web / Ember Lab 的独立城市空间观察工具。
