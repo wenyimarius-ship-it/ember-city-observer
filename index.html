@@ -3,8 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>同样是逛街，你更想走哪条路？ · 城市观察台</title>
-    <meta name="description" content="看看两条示意路线，点一条你想走的路。" />
+    <title>城市观察台 · City Observation Desk</title>
+    <meta
+      name="description"
+      content="走两条示意路线，选一条你更愿意继续逛的路。"
+    />
     <meta property="og:title" content="城市观察台" />
     <meta
       property="og:description"
@@ -21,19 +24,17 @@
   <body>
     <header><a href="https://lab.mariustang.com">← Ember Lab</a></header>
     <main>
-      <section class="city-play" aria-label="城市路线小游戏">
-        <div id="play-intro">
-          <h1>同样是逛街，你更想走哪条路？</h1>
-          <p>看看两条示意路线，点一条你想走的路。</p>
-        </div>
-        <div id="city-play">
-          <button class="primary" data-action="start">开始走</button>
-        </div>
+      <section class="city-play" aria-labelledby="play-title">
+        <p class="eyebrow">CITY OBSERVATION DESK</p>
+        <h1 id="play-title">城市观察台</h1>
+        <p class="play-question">同样是逛街，你更想走哪条路？</p>
+        <p>走两条示意路线，选一条你更愿意继续逛的路。约 1 分钟。</p>
         <noscript><p>请开启 JavaScript 后开始试玩。</p></noscript>
-        <div id="city-more" hidden>
-          <a href="record.html">记录我走过的地方 ↗</a>
-        </div>
+        <div id="city-play"></div>
       </section>
     </main>
+    <footer id="record-entry" class="city-record" hidden>
+      <a href="record.html">记录我走过的地方 ↗</a>
+    </footer>
   </body>
 </html>

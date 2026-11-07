@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>记下一个地方 · 城市观察台</title>
+    <title>记录我走过的地方 · 城市观察台</title>
     <meta
       name="description"
-      content="记下去过的地方和走起来的感觉，生成你自己的小卡。"
+      content="画下自己的路线，点选感受，留下我的逛街路线。"
     />
     <link rel="icon" href="favicon.svg" />
     <link rel="stylesheet" href="style.css" />
@@ -15,33 +15,65 @@
   </head>
   <body>
     <header><a href="./">← 返回试玩</a></header>
-    <main class="quick-record">
-      <h1>记下一个地方</h1>
+    <main class="route-record">
+      <h1>记录我走过的地方</h1>
       <p id="record-message" role="status"></p>
-      <a id="legacy" href="desk.html" hidden>打开已有的完整观察记录 →</a>
-      <form id="quick-form" novalidate>
+      <form id="place-form" novalidate>
         <label for="place">你去了哪里？</label
         ><input
           id="place"
-          name="place"
           maxlength="200"
-          autocomplete="off"
           required
-        /><label for="feeling">走起来是什么感觉？</label
-        ><textarea
-          id="feeling"
-          name="feeling"
-          maxlength="10000"
-          required
-        ></textarea
-        ><button class="primary" type="submit">生成我的小卡</button>
+          placeholder="商场或街区名称"
+        />
+        <details>
+          <summary>基本信息（可选）</summary>
+          <label>城市<input id="city" maxlength="200" /></label
+          ><label
+            >空间类型<select id="type">
+              <option>商场</option>
+              <option>街区</option>
+              <option>商业综合体</option>
+              <option>其他</option>
+            </select></label
+          ><label>观察日期<input id="date" type="date" /></label>
+        </details>
+        <button class="primary" type="submit">开始画路线</button>
       </form>
-      <div id="small-cards" aria-live="polite"></div>
-      <div id="after-card" hidden>
-        <p>记好了，到这里就可以结束。内容只留在当前浏览器里。</p>
-        <button id="another">再记一个地方</button>
-        <div id="compare-link"></div>
-      </div>
+      <section id="editor" hidden>
+        <h2 id="editing-name"></h2>
+        <p class="hint">自己的路线示意，不代表测量尺寸。</p>
+        <div class="mode-tools">
+          <button id="draw-mode" aria-pressed="true">画路线</button
+          ><button id="mark-mode" aria-pressed="false">加感受（可跳过）</button>
+        </div>
+        <div id="feelings" hidden></div>
+        <p id="canvas-hint">点空白处添加节点，拖动编号调整位置。</p>
+        <svg
+          id="record-canvas"
+          viewBox="0 0 800 500"
+          role="group"
+          aria-label="我的路线画布"
+          tabindex="0"
+        ></svg>
+        <div id="node-tools"></div>
+        <details>
+          <summary>不用拖拽，调整节点</summary>
+          <div id="accessible-nodes"></div>
+        </details>
+        <div id="marker-list"></div>
+        <button id="finish" class="primary">完成路线记录</button>
+      </section>
+      <section id="result" hidden aria-live="polite"></section>
+      <div id="saved-records"></div>
+      <details class="advanced">
+        <summary>以前的记录与进阶工具</summary>
+        <a href="desk.html">打开原完整观察工具 →</a>
+        <p class="hint">
+          完整笔记、详细两地对照与备份导出在这里，已有数据保留。
+        </p>
+        <div id="old-cards"></div>
+      </details>
     </main>
   </body>
 </html>

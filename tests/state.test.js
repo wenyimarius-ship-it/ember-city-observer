@@ -44,3 +44,27 @@ test("reject corrupt or malicious backups", () => {
 test("demo is explicitly marked and valid", () => {
   assert.equal(validate(demo()).demo, true);
 });
+
+import {
+  createRecord,
+  checkRecords,
+  closestPoint,
+  review,
+} from "../js/route-record.js";
+test("route records validate independently and recap only recorded events", () => {
+  const r = createRecord("庭院");
+  r.space.nodes = [
+    { id: "a", label: "入口", type: "入口", note: "", x: 100, y: 100 },
+    { id: "b", label: "停留", type: "停留", note: "", x: 500, y: 100 },
+  ];
+  r.space.markers = [{ id: "m", kind: "like", x: 300, y: 100, note: "" }];
+  assert.deepEqual(checkRecords([r]), [r]);
+  assert.match(review(r), /1 个停留点，标记了喜欢这里 1 处/);
+  assert.deepEqual(closestPoint(r.space.nodes, { x: 250, y: 150 }), {
+    x: 250,
+    y: 100,
+    distance: 50,
+  });
+  r.space.markers[0].kind = "invalid";
+  assert.throws(() => checkRecords([r]));
+});

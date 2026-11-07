@@ -5,86 +5,199 @@ const b = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
   args: ["--no-sandbox"],
 });
-const context = await b.newContext({
-  viewport: { width: 375, height: 812 },
-  acceptDownloads: true,
-});
-const p = await context.newPage();
-const base = process.env.TEST_URL || "http://localhost:4183/";
-const errors = [];
-p.on("pageerror", (e) => errors.push(e.message));
-const old = initial();
-old.spaces[0].name = "旧地点不能覆盖";
-old.spaces[0].notes.stay = "旧观察";
-const raw = JSON.stringify(old);
-await p.goto(base);
-await p.evaluate(
-  (raw) => localStorage.setItem("ember-city-observation-v1", raw),
-  raw,
-);
-await p.goto(new URL("record.html", base).href);
-await p.screenshot({ path: "/tmp/city-record-form-375.png", fullPage: true });
-assert.equal(await p.locator("#quick-form input").count(), 1);
-assert.equal(await p.locator("#quick-form textarea").count(), 1);
-assert.equal(await p.getByText("对照这两个地方", { exact: true }).count(), 0);
-assert.equal(await p.getByText("画一下路线", { exact: true }).count(), 0);
-await p.locator("#place").fill("第一处街角");
-const words = "  我想在这里多走一会儿。\n风很舒服。  ";
-await p.locator("#feeling").fill(words);
-await p.getByRole("button", { name: "生成我的小卡" }).click();
-assert.equal(await p.locator(".small-card p").textContent(), words);
-assert.equal(await p.getByText("对照这两个地方", { exact: true }).count(), 0);
-assert.ok(await p.locator("#another").isVisible());
-await p.screenshot({ path: "/tmp/city-single-card-375.png", fullPage: true });
-await p.locator("[data-export]").click();
-const [json] = await Promise.all([
-  p.waitForEvent("download"),
-  p.locator("[data-json]").click(),
-]);
-assert.equal(json.suggestedFilename(), "我的地点小卡.json");
-const [png] = await Promise.all([
-  p.waitForEvent("download"),
-  p.locator("[data-png]").click(),
-]);
-await png.saveAs("/tmp/city-small-card.png");
-await p.reload();
-assert.equal(await p.locator(".small-card").count(), 1);
-await p.getByRole("button", { name: "再记一个地方" }).click();
-await p.locator("#place").fill("第二处中庭");
-await p.locator("#feeling").fill("走起来有点绕。");
-await p.getByRole("button", { name: "生成我的小卡" }).click();
-assert.equal(await p.locator(".small-card").count(), 2);
-assert.ok(await p.getByRole("button", { name: "对照这两个地方" }).isVisible());
-assert.equal(
-  await p.evaluate(() => localStorage.getItem("ember-city-observation-v1")),
-  raw,
-);
-assert.ok(
-  await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-);
-await p.screenshot({ path: "/tmp/city-record-375.png", fullPage: true });
-await p.locator("[data-draw]").first().click();
-await p.waitForURL("**/desk.html?session=*");
-await p.locator('[data-add="停留"]').click();
-await p.goto(new URL("record.html", base).href);
-await p.locator("[data-draw]").first().click();
-assert.equal(await p.locator("#canvas .route-node").count(), 1);
-await p.goto(new URL("record.html", base).href);
-await p.getByRole("button", { name: "对照这两个地方" }).click();
-await p.waitForURL("**#compare");
-assert.match(await p.locator("#comparison").textContent(), /第一处街角/);
-assert.match(await p.locator("#comparison").textContent(), /第二处中庭/);
-await p.goto(new URL("desk.html", base).href);
-assert.equal(
-  await p.locator('[data-field="name"]').first().inputValue(),
-  "旧地点不能覆盖",
-);
-assert.equal(
-  await p.evaluate(() => localStorage.getItem("ember-city-observation-v1")),
-  raw,
-);
-assert.deepEqual(errors, []);
-console.log(
-  "PASS two-field card, verbatim text, second-card gating, 375px, reload, per-card routes, comparison, old data preserved",
-);
+const base = process.env.TEST_URL || "http://localhost:4213/";
+for (const width of [375, 1440]) {
+  const c = await b.newContext({
+    viewport: { width, height: 900 },
+    hasTouch: width === 375,
+    isMobile: width === 375,
+  });
+  const p = await c.newPage();
+  const errors = [];
+  p.on("pageerror", (e) => errors.push(e.message));
+  p.on("console", (m) => {
+    if (m.type() === "error") errors.push(m.text());
+  });
+  const old = initial();
+  old.spaces[0].name = "旧地点";
+  old.spaces[0].notes.route = "旧观察不能丢";
+  old.spaces[0].nodes = [
+    {
+      id: "old-node",
+      type: "入口",
+      label: "旧节点",
+      note: "旧停留",
+      x: 100,
+      y: 100,
+    },
+  ];
+  const raw = JSON.stringify(old);
+  const oldCards = JSON.stringify([
+    {
+      id: "12345678-1234-1234-1234-123456789012",
+      name: "原小卡",
+      feeling: "原话不能丢",
+    },
+  ]);
+  await p.goto(base);
+  await p.evaluate(
+    ({ raw, oldCards }) => {
+      localStorage.setItem("ember-city-observation-v1", raw);
+      localStorage.setItem("ember-city-small-cards-v1", oldCards);
+      localStorage.setItem(
+        "ember-city-card-session:12345678-1234-1234-1234-123456789012",
+        raw,
+      );
+    },
+    { raw, oldCards },
+  );
+  await p.goto(new URL("record.html", base).href);
+  await p.locator("#place").fill("真实到访·庭院");
+  await p.getByRole("button", { name: "开始画路线", exact: true }).click();
+  async function point(x, y) {
+    const box = await p.locator("#record-canvas").boundingBox();
+    await p.locator("#record-canvas")[width === 375 ? "tap" : "click"]({
+      position: { x: (x / 800) * box.width, y: (y / 500) * box.height },
+    });
+  }
+  for (const [x, y] of [
+    [100, 100],
+    [600, 100],
+    [600, 380],
+  ])
+    await point(x, y);
+  assert.equal(await p.locator("#record-canvas .node").count(), 3);
+  await p.locator("#node-tools #toggle-stop").click();
+  await p.locator("#record-canvas .node").first().scrollIntoViewIfNeeded();
+  const beforeDrag = await p.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem("ember-city-route-records-v1"))[0].space
+        .nodes[0].x,
+  );
+  let n = await p.locator("#record-canvas .node").first().boundingBox();
+  if (width === 375) {
+    const session = await c.newCDPSession(p);
+    const x = n.x + n.width / 2,
+      y = n.y + n.height / 2;
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x, y }],
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: x + 15, y: y + 10 }],
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+  } else {
+    await p.mouse.move(n.x + n.width / 2, n.y + n.height / 2);
+    await p.mouse.down();
+    await p.mouse.move(n.x + n.width / 2 + 15, n.y + n.height / 2 + 10, {
+      steps: 3,
+    });
+    await p.mouse.up();
+  }
+  assert.equal(await p.locator("#record-canvas .node").count(), 3);
+  assert.ok(
+    (await p.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("ember-city-route-records-v1"))[0].space
+          .nodes[0].x,
+    )) > beforeDrag,
+  );
+  await p.locator("#accessible-nodes").locator("..").locator("summary").click();
+  await p.locator('[data-coordinate="x"]').first().fill("100");
+  await p.locator('[data-coordinate="x"]').first().dispatchEvent("change");
+  await p.locator('[data-coordinate="y"]').first().fill("100");
+  await p.locator('[data-coordinate="y"]').first().dispatchEvent("change");
+  await p.locator("#mark-mode").click();
+  await p.locator('[data-feeling="like"]').click();
+  await point(300, 100);
+  await p.locator('[data-feeling="shop"]').click();
+  await point(600, 250);
+  assert.equal(await p.locator("#record-canvas .marker").count(), 2);
+  assert.ok(
+    await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  );
+  await p.screenshot({
+    path: `/tmp/city-route-editor-${width}.png`,
+    fullPage: true,
+  });
+  await p.locator("#finish").click();
+  assert.match(
+    await p.locator("#result").textContent(),
+    /我的逛街路线 · 已完成/,
+  );
+  assert.match(
+    await p.locator("#result").textContent(),
+    /喜欢这里 1 处、发现有趣的店 1 处/,
+  );
+  assert.equal(await p.locator("#result svg .node").count(), 3);
+  assert.equal(await p.locator("#result svg .marker").count(), 2);
+  assert.ok(
+    await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  );
+  await p.screenshot({
+    path: `/tmp/city-route-card-${width}.png`,
+    fullPage: true,
+  });
+  await p.reload();
+  await p.locator("[data-open]").click();
+  assert.equal(await p.locator("#result .marker").count(), 2);
+  await p.locator("#edit-route").click();
+  await p.locator("#record-canvas .node").first().focus();
+  await p.keyboard.press("ArrowRight");
+  await p.locator("#delete-node").click();
+  assert.equal(await p.locator("#record-canvas .node").count(), 2);
+  assert.equal(
+    (await p.locator("#record-canvas polyline").getAttribute("points")).split(
+      " ",
+    ).length,
+    2,
+  );
+  await p.locator("#finish").click();
+  await p.locator("#new-place").click();
+  await p.locator("#place").fill("第二处街区");
+  await p.getByRole("button", { name: "开始画路线", exact: true }).click();
+  await point(120, 120);
+  await point(650, 360);
+  await p.locator("#finish").click();
+  assert.match(
+    await p.locator("#result").textContent(),
+    /这次没有添加感受标记/,
+  );
+  assert.equal(await p.locator("#result .marker").count(), 0);
+  assert.ok(await p.locator("#graphic-compare").isVisible());
+  await p.locator("#graphic-compare").click();
+  assert.equal(await p.locator(".graphic-pair .route-card").count(), 2);
+  assert.equal(
+    await p.evaluate(() => localStorage.getItem("ember-city-observation-v1")),
+    raw,
+  );
+  assert.equal(
+    await p.evaluate(() => localStorage.getItem("ember-city-small-cards-v1")),
+    oldCards,
+  );
+  await p.goto(new URL("desk.html", base).href);
+  assert.equal(
+    await p.locator('[data-field="name"]').first().inputValue(),
+    "旧地点",
+  );
+  assert.equal(await p.locator("#canvas .route-node").count(), 1);
+  await p.goto(new URL("record.html", base).href);
+  await p.locator(".advanced summary").click();
+  await p.getByRole("link", { name: "打开原小卡路线 →" }).click();
+  assert.equal(
+    await p.locator('[data-field="name"]').first().inputValue(),
+    "旧地点",
+  );
+  assert.equal(await p.locator("#canvas .route-node").count(), 1);
+  assert.deepEqual(errors, []);
+  console.log(
+    `PASS ${width}px B/C/D: create, SVG add/drag/delete/coordinates, 2 feelings, review, skip, restore, optional graphical comparison, old data unchanged`,
+  );
+  await c.close();
+}
 await b.close();
