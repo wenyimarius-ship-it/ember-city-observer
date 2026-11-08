@@ -85,11 +85,14 @@ CHROMIUM_PATH=/usr/bin/chromium npm run test:browser
 
 1. 将此分支推送至 GitHub，在 Vercel 使用 **Add New → Project** 新建独立项目，导入 `wenyimarius-ship-it/ember-city-observer`。不要选择任何现有项目。
 2. 选择 Framework Preset **Other**，Root Directory 为仓库根目录；不需要构建命令，Output Directory 为 `.`。仓库 `vercel.json` 已声明这些设置。没有环境变量要求；Install Command 可设置为 `npm ci`，依赖仅用于测试。
-3. 选择此功能分支部署，记录平台分配的 `*.vercel.app` 默认地址，先在该地址完成操作验证。不要配置 `city.mariustang.com` 或其他自定义域名。
+3. 选择此功能分支部署，记录平台分配的 `*.vercel.app` 默认地址，先在该地址完成操作验证。该地址用于预览，分享标签使用正式域名 `city.mariustang.com`。
 4. 通过 `TEST_URL=https://平台分配地址 CHROMIUM_PATH=/usr/bin/chromium npm run test:browser` 运行同一集成测试；若部署保护启用，先在 Vercel 设置合适的测试访问方式。再在真实手机 Safari / Chrome 检查触控、下载与长中文输入。
 5. 确认默认地址后，未来由独立任务在 Ember Lab 增加链接卡片即可。当前应用已有低干扰的 Back to Ember Lab 入口。无需改造为地图服务或改动主站。
 
 localStorage 按域名隔离，预览地址、生产默认地址和未来自定义域名之间不会自动同步。迁移用 JSON 导出 / 导入。
+
+
+分享元信息使用正式地址 `https://city.mariustang.com/`。发布后检查网页源码中的 canonical、Open Graph 与 Twitter Card，并确认分享图 `/og.png` 返回 PNG。
 
 ## 待改进与已知边界
 
