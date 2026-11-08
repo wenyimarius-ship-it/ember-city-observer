@@ -1,4 +1,5 @@
 {
+  "git": { "deploymentEnabled": { "fix/share-metadata": false } },
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "",
