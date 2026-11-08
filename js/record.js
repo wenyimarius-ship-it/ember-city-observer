@@ -1,3 +1,4 @@
+import { resumeSession } from "./analytics.js";
 import { initial, validate } from "./state.js";
 import {
   recordKey,
@@ -501,3 +502,5 @@ $("#old-cards").onclick = (e) => {
     tell("无法打开原小卡，旧内容仍保留，请稍后重试。");
   }
 };
+
+resumeSession();

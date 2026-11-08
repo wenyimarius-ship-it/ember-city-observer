@@ -1,3 +1,4 @@
+import { homeShown, contentShown } from "./analytics.js";
 const stage = document.querySelector("#city-play");
 
 const routes = [
@@ -72,6 +73,7 @@ function walk() {
     map(route, stopIndex / (route.stops.length - 1)) +
       `<p>${route.stops[stopIndex]}</p><div class="play-actions"><button class="primary" data-step="next">${nextLabel}</button></div>`,
   );
+  contentShown();
 }
 
 function compare() {
@@ -159,3 +161,5 @@ show(
   '<div class="play-actions"><button class="primary" data-step="restart">开始走</button></div>',
   false,
 );
+
+homeShown();

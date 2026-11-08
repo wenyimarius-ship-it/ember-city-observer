@@ -1,3 +1,4 @@
+import { resumeSession } from "./analytics.js";
 import {
   initial,
   validate,
@@ -359,3 +360,5 @@ if (storageFailed)
   $("#save-status").textContent = "存储读取失败 · 请导出备份或导入恢复";
 
 $("#import-button").onclick = () => $("#import").click();
+
+resumeSession();
