@@ -1,100 +1,36 @@
-# City 试玩草稿 · ux/city-first-play
+# City Observation Desk · 城市观察对照台
 
-本轮仅更新 City 草稿 PR #1，不正式发布，不改 Lab 或 Puzzle。
+走完两条虚构示意路线，想一想自己更愿意在哪一种空间停留。也可以画一条自己实际走过的路线，把停留点与感受留在浏览器里。
 
-- `/`：参考历史 `6fa84f1` 恢复两条示意路线的逐站探索、途中反馈、偏好与可跳过的理由选择、试玩结果。不采用立即 A/B 出结果版本。试玩结束后才显示真实地点记录入口。
-- `/record.html`：输入地点名称即可画 SVG 路线；城市、类型、日期可选。点空白处加节点，拖动或坐标输入调整，选中节点可删除或标为停留。画完可直接完成，或选择四种感受后点路线添加图形标记；文字完全可选。
-- 完成后显示「我的逛街路线」卡：地点、路线、停留 / 感受标记和只依据实际记录的回顾。不要求笔记、两个地点、对照或导出。两条完成记录后提供可选图形比较。
-- `/desk.html`：保留原完整笔记、路线、详细 A/B 对照及 JSON / PNG 导出工具；本轮未修改该页、`js/app.js`、旧状态模型或导出模块。
-- 原 `ember-city-observation-v1`、`ember-city-small-cards-v1` 和已有 `ember-city-card-session:<UUID>` 保持兼容。轻量路线用独立 `ember-city-route-records-v1` 自动保存；旧记录入口位于折叠的「以前的记录与进阶工具」。旧小卡没有路线会话时，仅在打开后新建对应会话，不覆盖已有会话。新路线进入进阶工具时保留已有高级笔记与第二处空间。
+[打开 City](https://city.mariustang.com/) · [返回 Ember Lab](https://lab.mariustang.com/)
 
-## 本轮验证
+## 三个入口
 
-先运行 `npm start`；如 4173 被残留服务占用，可另用 `python3 -m http.server 4183`，再相应设置 `TEST_URL`。
+| 页面 | 能做什么 |
+| --- | --- |
+| [试玩](index.html) | 逐站浏览两条示意路线，选择偏好，可跳过理由，完成后进入真实地点记录 |
+| [轻量记录](record.html) | 从地点名称开始画 SVG 路线。拖动或用坐标编辑节点，标记停留与感受。完成后生成个人路线卡，有两条记录时可选做图形比较 |
+| [进阶工作台](desk.html) | 并排记录 A/B 空间，编辑入口、途经、停留和出口，比较五类笔记，导出 PNG 或 JSON，亦可导入完整工作台 JSON |
 
-```sh
-npm test
-TEST_URL=http://localhost:4183/ npm run test:play
-TEST_URL=http://localhost:4183/ npm run test:record
-TEST_URL=http://localhost:4183/desk.html npm run test:browser
-```
-
-试玩和轻量路线浏览器测试覆盖 375 / 1440px；完整工具回归覆盖 320 / 390 / 700 / 1440px。自动化和模拟触控不视为真人验收；详见 [UX-ACCEPTANCE.md](UX-ACCEPTANCE.md)。下方保留原 MVP 的设计与部署说明，入口现已拆分为试玩、轻记录和进阶工具。
-
----
-
-# City Observation Desk · Phase 3.3
-
-**How a City Moves You** — Ember Personal Web / Ember Lab 的独立城市空间观察工具。
-
-使用 HTML、CSS、原生 JavaScript modules、SVG 与 Canvas。运行时无第三方依赖、账号、API、数据库或网络字体。观察是个人主观记录；路线不代表真实平面比例，不自动评分或判断哪类动线更好。
+路线表达个人体验，坐标为示意。进阶工作台每处最多 100 个节点，JSON 导入上限 2 MB。长文本可能超出设备的 Canvas 导出上限，此时仍可用 JSON 保存工作台数据。
 
 ## 本地运行
 
-需要 Python 3；Node.js 22+ 用于测试（本环境验证 Node 24.22.1）。
+原生 HTML、CSS、JavaScript modules、SVG 和 Canvas。使用 Python 3 在根目录启动 HTTP 服务，打开 [localhost:4173](http://localhost:4173/)。
 
 ```sh
-cd /workspace/ember-city-observer
-npm start
+python3 -m http.server 4173
 ```
 
-通过本地 HTTP 的 4173 端口访问；不要用 file:// 打开 ES modules。应用本身无需 npm install。服务进程需在新环境重新启动。
+运行测试需 Node.js 22+。安装开发依赖后执行 `npm test`。浏览器回归需另开终端运行服务，再执行 `npm run test:play`、`npm run test:record` 或 `npm run test:browser`，可通过 `TEST_URL` 和 `CHROMIUM_PATH` 指定目标和 Chromium。详见 [测试记录](TESTING.md) 和 [试玩验收](UX-ACCEPTANCE.md)。
 
-## 目录
+## 实现与数据
 
-```text
-index.html           页面、SEO / OG、表单与工作流程
-style.css            Urban Field Notes 响应式视觉
-js/state.js          状态模型、Demo、节点操作与导入校验
-js/app.js            UI、SVG pointer / 键盘交互、持久化
-js/export.js         原生 Canvas PNG、JSON 下载与输入摘要
-favicon.svg          站点图标
-og.svg / og.png       分享图源文件与兼容的 PNG
-vercel.json          独立静态部署和响应头配置
- tests/state.test.js  状态层测试
- tests/browser.mjs    Chromium 浏览器集成测试
-TESTING.md           实测范围、结果与限制
-```
+- [js/play.js](js/play.js) 处理示意路线试玩，[js/record.js](js/record.js) 管理轻量记录。
+- [js/app.js](js/app.js)、[js/state.js](js/state.js) 和 [js/export.js](js/export.js) 实现进阶工具、状态校验及导出。
+- 轻量路线使用 `ember-city-route-records-v1`，进阶工作台使用 `ember-city-observation-v1`。旧记录可从轻量页的进阶区打开。数据随浏览器与站点来源隔离，多个标签页可能覆盖彼此修改。
+- 首页试玩会按配置发送打开、开始、完成事件到 PostHog。正式事件只允许配置中的站点来源，测试可用 `analytics_test=1`。路线、感受和笔记留在本地。接入代码见 [js/analytics.js](js/analytics.js)。
 
-## 已实现流程与交互
+## 部署与当前状态
 
-1. 创建 A/B：名称、城市、类型、描述、日期。Demo 是明确标记的虚构示例，载入前确认替换。
-2. SVG 路线：入口、途经、停留、出口；按数组顺序自动连线。可拖动、编辑名称和类型、写节点记录、删除、上下排序。每个空间最多 100 个节点。
-3. 不拖拽也可编辑：直接输入 X/Y；Tab 聚焦 SVG 节点，方向键移动 5 单位，Shift + 方向键移动 20 单位。拖动仅绑定 SVG 节点，表单文字输入不会触发拖动。小屏节点有透明扩展触控区域，紧密节点可用坐标表单编辑。
-4. 五项笔记：动线、选品、氛围、方向感、停留意愿。对照页按维度切换，整体体验展示全部记录；偏好支持 A/B、无偏好和未选择，原因自由填写。
-5. 观察卡：两处地点、日期、缩略路线、五项笔记、基于用户输入的简短摘要与偏好原因。PNG 额外包含所有节点名称及记录。原生 Canvas 自动测量文字并换行、计算整体高度，不调用截图服务，不加载跨域字体。
-6. 自动保存：localStorage 键 `ember-city-observation-v1`；刷新恢复两处空间、节点坐标顺序、笔记、偏好与活动空间。JSON 导出完整状态，导入校验版本、字段类型、尺寸、节点数量、ID 唯一性、坐标和枚举；最大文件 2 MB。
-7. 导入、新建、Demo 都先确认，取消保留原数据。遇到损坏存储时保留原始值，暂停覆盖，提示导入恢复或清空；写入失败仍可编辑和导出 JSON。
-
-## 测试
-
-```sh
-npm ci --cache /tmp/city-npm-cache
-npm test
-# 另一终端运行 npm start
-CHROMIUM_PATH=/usr/bin/chromium npm run test:browser
-```
-
-浏览器测试唯一开发依赖为锁定版本的 Playwright。需本机已安装 Chromium；测试默认使用 `/usr/bin/chromium`，可用 `CHROMIUM_PATH` 覆盖。`TEST_URL` 可指定待测部署地址，默认本地 4173。生成的截图、JSON 与 PNG 放在 `/tmp/city-*`，不含个人生产数据。
-
-完整实测结果见 [TESTING.md](TESTING.md)。
-
-## Vercel 默认地址部署
-
-本轮没有修改其他仓库、Ember 主站、Lab、DNS 或现有 Vercel 项目。环境没有 Vercel 身份凭据，**尚未执行线上部署或默认域名验证**。
-
-1. 将此分支推送至 GitHub，在 Vercel 使用 **Add New → Project** 新建独立项目，导入 `wenyimarius-ship-it/ember-city-observer`。不要选择任何现有项目。
-2. 选择 Framework Preset **Other**，Root Directory 为仓库根目录；不需要构建命令，Output Directory 为 `.`。仓库 `vercel.json` 已声明这些设置。没有环境变量要求；Install Command 可设置为 `npm ci`，依赖仅用于测试。
-3. 选择此功能分支部署，记录平台分配的 `*.vercel.app` 默认地址，先在该地址完成操作验证。不要配置 `city.mariustang.com` 或其他自定义域名。
-4. 通过 `TEST_URL=https://平台分配地址 CHROMIUM_PATH=/usr/bin/chromium npm run test:browser` 运行同一集成测试；若部署保护启用，先在 Vercel 设置合适的测试访问方式。再在真实手机 Safari / Chrome 检查触控、下载与长中文输入。
-5. 确认默认地址后，未来由独立任务在 Ember Lab 增加链接卡片即可。当前应用已有低干扰的 Back to Ember Lab 入口。无需改造为地图服务或改动主站。
-
-localStorage 按域名隔离，预览地址、生产默认地址和未来自定义域名之间不会自动同步。迁移用 JSON 导出 / 导入。
-
-## 待改进与已知边界
-
-- 默认 Vercel 地址上线验证、真实 iOS / Android 验证尚未执行；模拟触控不代表真机。
-- 笔记非常长时 PNG 会变高；高度超过 30000px 时拒绝生成并提示使用 JSON 或缩短内容，避免静默截断。不同设备 Canvas 内存上限可能更低，失败会显示提示。
-- 目前保存一组 A/B 观察。多组历史、撤销 / 重做、路线吸附可作为后续功能，当前可用 JSON 备份保留多次观察。
-- 中文采用系统字体，设备间字形可能不同；OG 图片为静态 PNG，观察卡在当前设备绘制。
-- 无跨标签页协同；同时编辑同一域名的多个标签页可能互相覆盖，应使用单个标签页。
+Vercel 的 `ember-city-observer` 项目对应本仓库 `main`，Production 记录为 READY（`7dea9c7`）。[vercel.json](vercel.json) 直接发布根目录，应用无需构建或服务器端环境变量。平台同时配置 `city.mariustang.com` 与 `ember-city-observer.vercel.app`，两者有各自的浏览器存储。平台状态不代表手机触控、下载或统计入库验收。
