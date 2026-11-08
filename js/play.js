@@ -1,3 +1,5 @@
+import {trackFunnel} from './analytics.js';
+
 const stage = document.querySelector("#city-play");
 
 const routes = [
@@ -121,6 +123,7 @@ function result(index) {
   stage.closest("section").classList.add("result-mode");
   document.querySelector("#record-entry").hidden = false;
   stage.scrollIntoView({ block: "start" });
+  trackFunnel('complete');
 }
 
 stage.addEventListener("click", (event) => {
@@ -129,6 +132,7 @@ stage.addEventListener("click", (event) => {
   if (step === "restart") {
     routeIndex = 0;
     stopIndex = 0;
+    trackFunnel('start');
     walk();
   } else if (step === "next") {
     if (stopIndex < routes[routeIndex].stops.length - 1) {
@@ -159,3 +163,4 @@ show(
   '<div class="play-actions"><button class="primary" data-step="restart">开始走</button></div>',
   false,
 );
+trackFunnel('open');
