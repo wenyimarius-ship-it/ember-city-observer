@@ -34,3 +34,7 @@ python3 -m http.server 4173
 ## 部署与当前状态
 
 Vercel 的 `ember-city-observer` 项目对应本仓库 `main`，Production 记录为 READY（`7dea9c7`）。[vercel.json](vercel.json) 直接发布根目录，应用无需构建或服务器端环境变量。平台同时配置 `city.mariustang.com` 与 `ember-city-observer.vercel.app`，两者有各自的浏览器存储。平台状态不代表手机触控、下载或统计入库验收。
+
+## 云端副本
+
+新增主动保存与恢复入口，默认仍在本地使用。恢复码支持换设备取回、更新、删除云端副本；正文进入 Supabase，PostHog 只记录行为。详见 [接入与权限说明](docs/cloud-persistence.md)。
