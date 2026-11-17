@@ -1,4 +1,6 @@
 import { initial, validate } from "./state.js";
+import { download } from "./export.js";
+import { exportRecords, parseRecordBackup, mergeRecords, maxBackupBytes } from "./route-backup.js";
 import {
   recordKey,
   feelings,
@@ -26,12 +28,14 @@ let records = [],
   mode = "draw",
   kind = "like",
   readable = true;
+let storedSnapshot = null;
 const sessionKey = (id) => "ember-city-card-session:" + id;
 function tell(text) {
   $("#record-message").textContent = text;
 }
 try {
   const raw = localStorage.getItem(recordKey);
+  storedSnapshot = raw;
   if (raw) records = checkRecords(JSON.parse(raw));
 } catch {
   readable = false;
@@ -40,12 +44,77 @@ try {
 function persist() {
   if (!readable) return;
   try {
-    localStorage.setItem(recordKey, JSON.stringify(records));
+    const raw = JSON.stringify(records);
+    localStorage.setItem(recordKey, raw);
+    storedSnapshot = raw;
     tell("已自动保存");
   } catch {
     tell("未能自动保存，请勿刷新；可以先截取路线卡，旧记录未修改。");
   }
 }
+
+let pendingImport = null, fileRead = 0;
+const importDialog = $("#route-import-dialog");
+$("#export-routes").onclick = () => {
+  try {
+    if (!readable && !records.length) throw Error("原始存储无法读取，无法生成路线备份；原始值未修改。");
+    const backup = exportRecords(records);
+    download(new Blob([JSON.stringify(backup, null, 2)], {type:"application/json"}), "city-routes.json");
+    tell("已导出全部路线记录（含未完成路线和感受标记）。");
+  } catch (error) { tell(`导出失败：${error.message}`); }
+};
+$("#import-routes").onclick = () => $("#route-file").click();
+$("#route-file").onchange = async (event) => {
+  const request = ++fileRead, file = event.target.files[0];
+  pendingImport = null;
+  if (!file) return;
+  try {
+    if (!readable) throw Error("路线存储无法读取，已停止写入并保留原始值；请先备份，勿刷新。");
+    if (file.size > maxBackupBytes) throw Error("文件不能超过 2 MB。");
+    const incoming = parseRecordBackup(await file.text());
+    if (request !== fileRead) return;
+    const plan = mergeRecords(records, incoming);
+    pendingImport = incoming;
+    $("#route-import-summary").textContent = `将导入 ${plan.added} 条路线，跳过 ${plan.skipped} 条。已存在的 id 保留本地版本。`;
+    importDialog.showModal();
+  } catch (error) {
+    if (request === fileRead) tell(`导入失败：${error.message} 现有记录未修改。`);
+  } finally {
+    if (request === fileRead) event.target.value = "";
+  }
+};
+$("#cancel-route-import").onclick = () => importDialog.close();
+importDialog.onclose = () => { pendingImport = null; };
+$("#confirm-route-import").onclick = () => {
+  if (!pendingImport) return;
+  let plan;
+  try {
+    if (!readable) throw Error("存储无法读取，已停止写入并保留原始值。");
+    let stored;
+    try { stored = localStorage.getItem(recordKey); }
+    catch { readable = false; throw Error("存储无法读取，已停止写入并保留原始值。"); }
+    if (stored !== storedSnapshot) {
+      readable = false;
+      throw Error("其他页面已修改存储，本页已停止写入；请先导出本页路线，勿刷新。");
+    }
+    plan = mergeRecords(records, pendingImport);
+    if (plan.added) {
+      const raw = JSON.stringify(plan.records);
+      // A single atomic write precedes any change to in-memory records or UI.
+      try { localStorage.setItem(recordKey, raw); }
+      catch { throw Error("存储写入失败，请勿刷新；可先导出本页路线备份。"); }
+      records = plan.records;
+      storedSnapshot = raw;
+    }
+  } catch (error) {
+    importDialog.close();
+    tell(`导入失败：${error.message} 现有记录未修改。`);
+    return;
+  }
+  importDialog.close();
+  listing();
+  tell(`已导入 ${plan.added} 条路线；${plan.skipped} 条已存在，已跳过。`);
+};
 function syncMarkers() {
   const s = current.space;
   for (const m of s.markers) {
@@ -60,12 +129,26 @@ function svg(space, interactive = false) {
   return `<polyline class="record-path" points="${space.nodes.map((n) => `${n.x},${n.y}`).join(" ")}"/>${space.nodes.map((n, i) => `<g class="node ${selected === n.id ? "selected" : ""}" data-node="${esc(n.id)}" ${interactive ? 'tabindex="0" role="button"' : ""} aria-label="节点 ${i + 1}，${n.type}。方向键移动，Delete 删除"><title>${i + 1} / ${n.type}</title><circle class="hit" cx="${n.x}" cy="${n.y}" r="45"/><circle cx="${n.x}" cy="${n.y}" r="22"/><text x="${n.x}" y="${n.y + 7}">${i + 1}</text>${n.type === "停留" ? `<circle cx="${n.x + 19}" cy="${n.y - 19}" r="7"/>` : ""}</g>`).join("")}${space.markers
     .map((m) => {
       const f = feelings.find((f) => f.id === m.kind);
-      return `<g class="marker" data-marker="${esc(m.id)}" ${interactive ? 'tabindex="0" role="button"' : ""} aria-label="${f.label}${m.note ? "：" + esc(m.note) : ""}"><title>${f.label}${m.note ? "：" + esc(m.note) : ""}</title><circle cx="${m.x}" cy="${m.y}" r="30" fill="${f.color}"/><text x="${m.x}" y="${m.y + 8}">${f.icon}</text></g>`;
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.classList.add("marker");
+      g.dataset.marker = m.id;
+      if (interactive) { g.setAttribute("tabindex", "0"); g.setAttribute("role", "button"); }
+      const label = f.label + (m.note ? "：" + m.note : "");
+      g.setAttribute("aria-label", label);
+      g.innerHTML = `<title></title><circle cx="${m.x}" cy="${m.y}" r="30" fill="${f.color}"/><text x="${m.x}" y="${m.y + 8}"></text>`;
+      g.querySelector("title").textContent = label;
+      g.querySelector("text").textContent = f.icon;
+      return g.outerHTML;
     })
     .join("")}`;
 }
 function map(space) {
-  return `<svg viewBox="0 0 800 500" role="img" aria-label="${esc(space.name)}的个人记录路线">${svg(space)}</svg>`;
+  const el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  el.setAttribute("viewBox", "0 0 800 500");
+  el.setAttribute("role", "img");
+  el.setAttribute("aria-label", space.name + "的个人记录路线");
+  el.innerHTML = svg(space);
+  return el.outerHTML;
 }
 function legend(space) {
   return `<div class="legend">${feelings
@@ -77,18 +160,39 @@ function legend(space) {
     .join("")}</div>`;
 }
 function card(r) {
-  return `<article class="route-card"><h2>${esc(r.space.name)}</h2><p class="hint">我的真实到访记录 · 路线为个人示意，非测量平面图</p>${map(r.space)}${legend(r.space)}<p>${esc(review(r))}</p>${r.space.markers
-    .filter((m) => m.note)
-    .map(
-      (m) =>
-        `<p>${feelings.find((f) => f.id === m.kind).label}：${esc(m.note)}</p>`,
-    )
-    .join("")}</article>`;
+  const article = document.createElement("article");
+  article.className = "route-card";
+  article.innerHTML = `<h2></h2><p class="hint">我的真实到访记录 · 路线为个人示意，非测量平面图</p>${map(r.space)}${legend(r.space)}`;
+  article.querySelector("h2").textContent = r.space.name;
+  for (const text of [review(r), ...r.space.markers.filter(m=>m.note).map(m=>`${feelings.find(f=>f.id===m.kind).label}：${m.note}`)]) {
+    const p = document.createElement("p"); p.textContent = text; article.append(p);
+  }
+  return article.outerHTML;
 }
 function listing() {
-  $("#saved-records").innerHTML = records.length
-    ? `<h2>我的路线记录</h2>${records.map((r) => `<div class="saved-row"><h3>${esc(r.space.name)}</h3><button data-open="${r.id}">${r.completed ? "查看路线卡" : "继续画路线"}</button></div>`).join("")}${records.filter((r) => r.completed).length >= 2 ? '<button id="graphic-compare">看看最近两条路线（可选）</button>' : ""}${$("#result").hidden ? '<button id="new-place">再记一个地方</button>' : ""}`
-    : "";
+  const list = $("#saved-records");
+  list.replaceChildren();
+  if (!records.length) return;
+  const title = document.createElement("h2");
+  title.textContent = "我的路线记录";
+  list.append(title);
+  for (const r of records) {
+    const row = document.createElement("div"), heading = document.createElement("h3"), button = document.createElement("button");
+    row.className = "saved-row";
+    heading.textContent = r.space.name;
+    button.dataset.open = r.id;
+    button.textContent = r.completed ? "查看路线卡" : "继续画路线";
+    row.append(heading, button);
+    list.append(row);
+  }
+  for (const [id, text, visible] of [
+    ["graphic-compare", "看看最近两条路线（可选）", records.filter(r=>r.completed).length >= 2],
+    ["new-place", "再记一个地方", $("#result").hidden],
+  ]) {
+    if (!visible) continue;
+    const button = document.createElement("button");
+    button.id = id; button.textContent = text; list.append(button);
+  }
 }
 function draw() {
   const s = current.space;
@@ -104,9 +208,12 @@ function draw() {
   $("#marker-list").innerHTML = s.markers
     .map((m) => {
       const f = feelings.find((f) => f.id === m.kind);
-      return `<div class="marker-item" id="marker-${esc(m.id)}"><label>感受<select data-marker-kind="${esc(m.id)}">${feelings.map((option) => `<option value="${option.id}" ${option.id === m.kind ? "selected" : ""}>${option.icon} ${option.label}</option>`).join("")}</select></label> <button data-remove-marker="${esc(m.id)}">删除标记</button><details><summary>补一句（可选）</summary><label>文字补充<textarea maxlength="500" data-marker-note="${esc(m.id)}">${esc(m.note)}</textarea></label></details></div>`;
+      return `<div class="marker-item" id="marker-${esc(m.id)}"><label>感受<select data-marker-kind="${esc(m.id)}">${feelings.map((option) => `<option value="${option.id}" ${option.id === m.kind ? "selected" : ""}>${option.icon} ${option.label}</option>`).join("")}</select></label> <button data-remove-marker="${esc(m.id)}">删除标记</button><details><summary>补一句（可选）</summary><label>文字补充<textarea maxlength="500" data-marker-note="${esc(m.id)}"></textarea></label></details></div>`;
     })
     .join("");
+  $("#marker-list").querySelectorAll("textarea").forEach(el => {
+    el.value = s.markers.find(m=>m.id===el.dataset.markerNote).note;
+  });
   $("#finish").disabled = s.nodes.length < 2;
 }
 function setMode(next) {

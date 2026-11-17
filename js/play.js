@@ -1,4 +1,5 @@
-import {trackFunnel} from './analytics.js';
+import {trackFunnel, trackFeedback} from './analytics.js';
+import {createFeedback} from './feedback.js';
 
 const stage = document.querySelector("#city-play");
 
@@ -44,6 +45,7 @@ const reasons = [
 let routeIndex = 0;
 let stopIndex = 0;
 let choice = 0;
+let feedback = null;
 
 function map(route, progress = 1, compact = false) {
   const path = route.points.map((point) => point.join(",")).join(" ");
@@ -55,6 +57,7 @@ function map(route, progress = 1, compact = false) {
 }
 
 function show(title, body, focus = true) {
+  feedback = null;
   stage.closest("section").classList.remove("result-mode");
   document.querySelector("#record-entry").hidden = true;
   stage.innerHTML = `<h2 tabindex="-1">${title}</h2>${body}`;
@@ -118,8 +121,14 @@ function result(index) {
       )
       .join("")}</div>
     <div class="play-result"><p>${label ? "我的理由：" + label : "这次跳过了理由"}</p><p>你选了 ${"AB"[choice]}${label ? `，因为这次你${index === 3 ? "就是更想走这条" : "更想" + label}` : ""}。</p></div>
+    <div class="play-feedback" role="group" aria-labelledby="feedback-question">
+      <p id="feedback-question">这个结果说中你了吗？</p>
+      <div class="feedback-buttons"><button data-rating="accurate">说中了</button><button data-rating="partial">有点偏</button><button data-rating="off">没说中</button></div>
+      <p class="feedback-status" role="status"></p>
+    </div>
     <div class="play-actions"><button class="primary" data-step="reason">换个原因再试一次</button></div>`,
   );
+  feedback = createFeedback(trackFeedback);
   stage.closest("section").classList.add("result-mode");
   document.querySelector("#record-entry").hidden = false;
   stage.scrollIntoView({ block: "start" });
@@ -127,6 +136,17 @@ function result(index) {
 }
 
 stage.addEventListener("click", (event) => {
+  const rating = event.target.closest("button[data-rating]")?.dataset.rating;
+  if (rating) {
+    if (feedback?.(rating)) {
+      stage.querySelectorAll("[data-rating]").forEach((button) => {
+        button.disabled = true;
+        button.setAttribute("aria-pressed", String(button.dataset.rating === rating));
+      });
+      stage.querySelector(".feedback-status").textContent = "谢谢你的反馈";
+    }
+    return;
+  }
   const step = event.target.closest("button[data-step]")?.dataset.step;
   if (!step) return;
   if (step === "restart") {

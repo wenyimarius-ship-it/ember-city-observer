@@ -1,5 +1,6 @@
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
+import { testFeedback } from "./feedback.mjs";
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
   args: ["--no-sandbox"],
@@ -103,4 +104,5 @@ for (const width of [375, 1440]) {
   );
   await page.close();
 }
+await testFeedback(browser);
 await browser.close();
