@@ -4,20 +4,22 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>画路线与对照 · 城市观察台</title>
-    <link rel="canonical" href="https://city.mariustang.com/desk.html" />
-    <meta property="og:url" content="https://city.mariustang.com/desk.html" />
-    <meta property="og:title" content="How a City Moves You" />
-    <meta property="og:description" content="A personal field desk for paths, pauses, and urban spaces." />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://city.mariustang.com/og.png" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="How a City Moves You" />
-    <meta name="twitter:description" content="A personal field desk for paths, pauses, and urban spaces." />
-    <meta name="twitter:image" content="https://city.mariustang.com/og.png" />
     <meta
       name="description"
       content="走两条示意路线，选一条你更愿意继续逛的路。"
     />
+    <meta property="og:title" content="How a City Moves You" />
+    <meta
+      property="og:description"
+      content="A personal field desk for paths, pauses, and urban spaces."
+    />
+    <meta property="og:type" content="website" />
+    <link rel="canonical" href="https://city.mariustang.com/desk.html" />
+    <meta property="og:url" content="https://city.mariustang.com/desk.html" />
+    <meta property="og:image" content="https://city.mariustang.com/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#f3f1e9" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="style.css" />
@@ -122,7 +124,7 @@
           ><button id="new">新建观察</button>
         </div>
         <p class="hint">
-          数据仅保留在当前浏览器。请导出 JSON
+          数据默认保留在当前浏览器；可在页面底部主动保存云端副本。也可以导出 JSON
           以便迁移或备份；清空不会删除已下载的文件。
         </p>
       </section>
@@ -139,5 +141,6 @@
         ><button id="accept" class="primary">确认替换</button>
       </div>
     </dialog>
-  </body>
+  <script type="module" src="js/cloud-city.js"></script>
+</body>
 </html>
