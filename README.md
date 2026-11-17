@@ -29,7 +29,9 @@ python3 -m http.server 4173
 - [js/play.js](js/play.js) 处理示意路线试玩，[js/record.js](js/record.js) 管理轻量记录。
 - [js/app.js](js/app.js)、[js/state.js](js/state.js) 和 [js/export.js](js/export.js) 实现进阶工具、状态校验及导出。
 - 轻量路线使用 `ember-city-route-records-v1`，进阶工作台使用 `ember-city-observation-v1`。旧记录可从轻量页的进阶区打开。数据随浏览器与站点来源隔离，多个标签页可能覆盖彼此修改。
-- 首页试玩会按配置发送打开、开始、完成事件到 PostHog。正式事件只允许配置中的站点来源，测试可用 `analytics_test=1`。路线、感受和笔记留在本地。接入代码见 [js/analytics.js](js/analytics.js)。
+- 首页试玩会按配置发送打开、开始、完成事件到 PostHog。结果页新增可选反馈事件 `city_feedback`，业务属性仅为 `site: city`、`rating: accurate / partial / off`、`traffic: live / test`，不含路线选择、理由、路线、感受或笔记。同一次结果只发送一次，换理由生成新结果后可再次反馈；只在配置的正式 origin 发送，`analytics_test=1` 标记 `traffic=test`，本地不发送反馈。发送协议沿用固定聚合 `distinct_id`、`$process_person_profile=false` 和 `$geoip_disable=true`，不建立个人画像。路线、感受和笔记留在本地。接入代码见 [js/analytics.js](js/analytics.js)。
+
+轻量记录页可“导出我的路线（JSON）”或“导入路线（JSON）”。备份格式为 `{schema:"ember-city-route-records", version:1, exportedAt, records:[...]}`，包含全部已完成/未完成路线及感受标记。导入文件上限 2 MB，每处最多 100 个节点，坐标限定在画布范围，未知字段丢弃。确认摘要后合并：按记录 id 去重，保留本地版本，提示跳过数量；取消、校验失败或写入失败不改变现有记录。读取故障时停止写入并保留原始值，写入失败时请勿刷新，可先导出本页路线。进阶工作台的 JSON 功能保持原样。
 
 ## 部署与当前状态
 

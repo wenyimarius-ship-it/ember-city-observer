@@ -150,6 +150,23 @@
 .advanced {
   color: var(--muted);
 }
+.route-backup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.route-backup button {
+  white-space: normal;
+}
+#route-import-dialog {
+  max-width: min(32rem, calc(100% - 36px));
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+#route-import-dialog h2 {
+  font-size: 24px;
+}
 .coordinate-row {
   display: grid;
   grid-template-columns: 1fr 1fr auto;

@@ -78,6 +78,19 @@
       </section>
       <section id="result" hidden aria-live="polite"></section>
       <div id="saved-records"></div>
+      <div class="route-backup" role="group" aria-label="路线备份">
+        <button id="export-routes" type="button">导出我的路线（JSON）</button>
+        <button id="import-routes" type="button">导入路线（JSON）</button>
+        <input id="route-file" type="file" accept="application/json" hidden />
+      </div>
+      <dialog id="route-import-dialog" aria-labelledby="route-import-title" aria-describedby="route-import-summary">
+        <h2 id="route-import-title">确认导入路线</h2>
+        <p id="route-import-summary"></p>
+        <div class="route-backup">
+          <button id="confirm-route-import" type="button">确认导入</button>
+          <button id="cancel-route-import" type="button">取消</button>
+        </div>
+      </dialog>
       <details class="advanced">
         <summary>以前的记录与进阶工具</summary>
         <a href="desk.html">打开原完整观察工具 →</a

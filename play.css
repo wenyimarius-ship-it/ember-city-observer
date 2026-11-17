@@ -58,6 +58,23 @@
 .city-record {
   margin: 1.25rem auto 2rem;
 }
+.play-feedback {
+  margin-top: 1rem;
+}
+.feedback-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.feedback-buttons button {
+  min-width: 44px;
+  min-height: 44px;
+  white-space: normal;
+}
+.feedback-status {
+  min-height: 1.65em;
+  margin: 0.4rem 0 0;
+}
 
 .result-mode > :not(#city-play) {
   display: none;

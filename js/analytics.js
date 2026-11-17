@@ -19,3 +19,13 @@ const record = enabled ? createFunnel({storage,search:window.location.search,emi
   ...analyticsConfig, traffic:sessionTraffic
 })}) : () => false;
 export function trackFunnel(node) { return record(`city_${node}`); }
+
+// Feedback is origin restricted even for test links; localhost never sends it.
+const feedbackSender = liveAllowed && analyticsConfig.projectToken
+  ? createPostHogSender({...analyticsConfig, traffic:traffic === 'test' ? 'test' : sessionTraffic})
+  : null;
+export function trackFeedback(rating) {
+  if (!feedbackSender) return false;
+  try { Promise.resolve(feedbackSender('city_feedback', {rating})).catch(() => {}); } catch { /* Optional feedback. */ }
+  return true;
+}

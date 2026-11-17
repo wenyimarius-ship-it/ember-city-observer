@@ -1,6 +1,7 @@
 import { chromium } from "playwright";
 import assert from "node:assert/strict";
 import { initial } from "../js/state.js";
+import { testRecordBackup } from "./record-backup.mjs";
 const b = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || "/usr/bin/chromium",
   args: ["--no-sandbox"],
@@ -260,4 +261,5 @@ for (const width of [375, 1440]) {
   );
   await c.close();
 }
+await testRecordBackup(b);
 await b.close();
